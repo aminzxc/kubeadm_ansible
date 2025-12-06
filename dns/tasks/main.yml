@@ -1,0 +1,34 @@
+- name: Ensure DNS is set to VPN
+  ansible.builtin.lineinfile:
+    path: /etc/resolv.conf
+    regexp: '^nameserver '
+    line: 'nameserver {{ IP }}'
+    insertafter: BOF
+
+- name: HTTP check registry.k8s.io
+  ansible.builtin.uri:
+    url: https://registry.k8s.io
+    method: GET
+    return_content: no
+    follow_redirects: all
+    status_code:
+      - 200
+      - 301
+      - 302
+  register: registry_check
+
+- debug:
+    var: registry_check
+
+- name: Show short result
+  ansible.builtin.debug:
+    msg: >
+      Host {{ inventory_hostname }}:
+      status={{ registry_check.status }}
+      redirected={{ registry_check.redirected | default(false) }}
+
+- name: Fail if registry is not reachable
+  ansible.builtin.fail:
+    msg: "Cannot reach https://registry.k8s.io from {{ inventory_hostname }}"
+  when: registry_check.status not in [200, 301, 302]
+
