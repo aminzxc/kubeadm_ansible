@@ -34,7 +34,7 @@
     - "'already exists' not in (lvol_result.msg | default(''))"
 - name: Set a hostname
   ansible.builtin.hostname:
-    name: master1
+    name: "{{ host_name }}"
 - name: Set timezone to Asia/Tehran
   community.general.timezone:
     name: Asia/Tehran
