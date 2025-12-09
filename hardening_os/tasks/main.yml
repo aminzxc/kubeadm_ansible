@@ -1,175 +1,154 @@
 - name: Update & Upgrade OS
   ansible.builtin.apt:
-    update_cache: yes
-    upgrade : full
-    autoremove: yes
-
+    update_cache: true
+    upgrade: full
+    autoremove: true
 - name: Install a list of packages
   ansible.builtin.apt:
     pkg:
-    - vnstat
-    - tcpdump 
-    - iperf3  
-    - dnsutils 
-    - traceroute  
-    - vim
-    - btop
-    - curl
-    - wget
-    - net-tools
-    - lsb-release
-    - ncdu
-    - ca-certificates
-    - fish
-
+      - vnstat
+      - tcpdump
+      - iperf3
+      - dnsutils
+      - traceroute
+      - vim
+      - btop
+      - curl
+      - wget
+      - net-tools
+      - lsb-release
+      - ncdu
+      - ca-certificates
+      - fish
+    state: present
 - name: Create a logical volume the size of all remaining space in the volume group
   community.general.lvol:
     vg: ubuntu-vg
     lv: ubuntu-lv
     size: +100%FREE
-    resizefs: yes
-  ignore_errors: yes
-
+    state: present
+    resizefs: true
+  register: lvol_result
+  failed_when:
+    - lvol_result is failed
+    - "'already exists' not in (lvol_result.msg | default(''))"
 - name: Set a hostname
   ansible.builtin.hostname:
     name: master1
-
 - name: Set timezone to Asia/Tehran
-  become: true
   community.general.timezone:
     name: Asia/Tehran
-
 - name: Enable NTP synchronization
   ansible.builtin.systemd:
     name: systemd-timesyncd
-    enabled: yes
+    enabled: true
     state: started
-    
-- name: Return motd to registered var
-  ansible.builtin.command: chsh -s /usr/bin/fish
-
+- name: Ensure current Ansible user default shell is fish
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: /usr/bin/fish
 - name: Change SSH Port
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^Port '
     line: Port 2222
   notify: Restart SSH
-
 - name: Disable root login
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^PermitRootLogin
     line: PermitRootLogin prohibit-password
   notify: Restart SSH
-
 - name: Disable password authentication
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^PasswordAuthentication
     line: PasswordAuthentication no
   notify: Restart SSH
-
 - name: Limit max auth tries
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^MaxAuthTries
     line: MaxAuthTries 3
   notify: Restart SSH
-
 - name: Allow specific users
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^AllowUsers
     line: AllowUsers root
   notify: Restart SSH
-
 - name: Force protocol 2
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^Protocol
     line: Protocol 2
   notify: Restart SSH
-
 - name: Disable TCP forwarding
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^AllowTcpForwarding
     line: AllowTcpForwarding no
   notify: Restart SSH
-
 - name: ClientAliveCountMax
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^ClientAliveCountMax
     line: ClientAliveCountMax 2
   notify: Restart SSH
-
 - name: Set log level to VERBOSE
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^LogLevel
     line: LogLevel VERBOSE
   notify: Restart SSH
-
 - name: Max sessions
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^MaxSessions
     line: MaxSessions 3
   notify: Restart SSH
-
 - name: Disable TCPKeepAlive
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^TCPKeepAlive
     line: TCPKeepAlive no
   notify: Restart SSH
-
 - name: Disable X11Forwarding
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^X11Forwarding
     line: X11Forwarding no
   notify: Restart SSH
-
 - name: Disable agent forwarding
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^AllowAgentForwarding
     line: AllowAgentForwarding no
   notify: Restart SSH
-
 - name: Disable ChallengeResponseAuthentication
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^ChallengeResponseAuthentication
     line: ChallengeResponseAuthentication no
   notify: Restart SSH
-
 - name: Disable PAM authentication
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^UsePAM
     line: UsePAM yes
   notify: Restart SSH
-    
 - name: Check every 5 minutes
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: ^ClientAliveInterval 
+    regexp: ^ClientAliveInterval
     line: ClientAliveInterval 300
   notify: Restart SSH
-
 - name: If it doesn't respond twice, end the session
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^ClientAliveCountMax
     line: ClientAliveCountMax 2
   notify: Restart SSH
-
-
-
 - name: Reboot the server safely
   ansible.builtin.reboot:
     reboot_timeout: 600
-

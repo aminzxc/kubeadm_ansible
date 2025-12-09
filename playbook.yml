@@ -1,10 +1,7 @@
-- name: deploy kubernetes
+- name: Deploy kubernetes
   hosts: all
-  become: yes
-
+  become: true
   roles:
     - hardening_os
     - dns
     - kubernetes
-
-
