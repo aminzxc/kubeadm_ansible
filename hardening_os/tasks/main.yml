@@ -45,7 +45,7 @@
     state: started
 - name: Ensure current Ansible user default shell is fish
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
     shell: /usr/bin/fish
 - name: Change SSH Port
   ansible.builtin.lineinfile:
@@ -149,6 +149,13 @@
     regexp: ^ClientAliveCountMax
     line: ClientAliveCountMax 2
   notify: Restart SSH
+- name: Apply kernel sysctl settings
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop: "{{ sysctl_settings | dict2items }}"
 - name: Reboot the server safely
   ansible.builtin.reboot:
     reboot_timeout: 600
