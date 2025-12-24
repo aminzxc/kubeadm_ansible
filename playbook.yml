@@ -2,6 +2,6 @@
   hosts: all
   become: true
   roles:
-    - dns
+    #   - dns
     - hardening_os
       #    - kubernetes

@@ -2,7 +2,7 @@
 sysctl_settings:
   # Memory
   vm.overcommit_memory: 1
-  vm.swappiness: 5
+  vm.swappiness: 0
 
   # TCP
   net.ipv4.tcp_syncookies: 1

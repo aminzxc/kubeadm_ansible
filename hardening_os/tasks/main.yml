@@ -20,7 +20,24 @@
       - ncdu
       - ca-certificates
       - fish
+      - fail2ban
     state: present
+- name: Create jail.local from template
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart fail2ban
+- name: Remove dir /etc/ssh/ssh_config.d
+  ansible.builtin.file:
+    path: /etc/ssh/ssh_config.d
+    state: absent
+- name: Remove dir /etc/ssh/sshd_config.d
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: absent
 - name: Create a logical volume the size of all remaining space in the volume group
   community.general.lvol:
     vg: ubuntu-vg
